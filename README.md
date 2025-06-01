@@ -1,6 +1,10 @@
 # 6909-to-20
 
-ERC6909 to ERC20 converter
+[![Foundry](https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg)](https://getfoundry.sh/)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+[![Solidity](https://img.shields.io/badge/Solidity-^0.8.0-363636.svg)](https://soliditylang.org/)
+
+ERC6909 to ERC20 converter using ERC-7511 minimal proxy clones for gas-efficient token wrapping.
 
 This smart contract allows you to wrap ERC6909 tokens into ERC20 tokens using ERC-7511 minimal proxy clones for gas-efficient deployment.
 
