@@ -10,6 +10,32 @@ Inspired by the [Gnosis 1155-to-20](https://github.com/gnosis/1155-to-20) conver
 
 - The ERC6909 token must implement `IERC6909Metadata` interface for automatic metadata wrapping
 
+## Deployment
+
+Uses [CreateX](https://github.com/pcaversaccio/createx) for deterministic cross-chain deployments.
+
+### Environment Setup
+
+```bash
+# Copy environment template
+cp .env.example .env
+```
+
+Fill in your `.env` file:
+```bash
+PRIVATE_KEY=your_private_key_here
+RPC_URL=your_rpc_url_here
+```
+
+### Deploy
+
+```bash
+# Set your desired network RPC URL in .env and run:
+./script/deploy.sh
+```
+
+The script will deploy the factory contract on the block explorer.
+
 ## Features
 
 - **Gas Efficient**: Uses ERC-7511 minimal proxy with PUSH0 optimization (saves 200 gas at deployment, 5 gas at runtime)
@@ -42,6 +68,7 @@ forge test
 
 - [ERC-7511: Minimal Proxy Contract with PUSH0](https://eips.ethereum.org/EIPS/eip-7511)
 - [Gnosis 1155-to-20](https://github.com/gnosis/1155-to-20)
+- [CreateX](https://github.com/pcaversaccio/createx)
 
 ## License
 
