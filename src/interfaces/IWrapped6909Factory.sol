@@ -6,6 +6,9 @@ pragma solidity ^0.8.0;
 /// @author JChoy
 /// @notice Interface for factory contract that creates wrapped ERC6909 tokens
 interface IWrapped6909Factory {
+    /// @notice Emitted when the clone fails
+    error FailedCreateClone();
+
     /// @notice Emitted when a new wrapped ERC6909 token is created
     /// @param token The address of the underlying ERC6909 token
     /// @param tokenId The token ID that was wrapped

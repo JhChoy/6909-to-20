@@ -2,7 +2,7 @@
 
 ERC6909 to ERC20 converter
 
-This smart contract allows you to wrap ERC6909 tokens into ERC20 tokens using minimal proxy clones for gas-efficient deployment.
+This smart contract allows you to wrap ERC6909 tokens into ERC20 tokens using ERC-7511 minimal proxy clones for gas-efficient deployment.
 
 Inspired by the [Gnosis 1155-to-20](https://github.com/gnosis/1155-to-20) converter, adapted for the ERC6909 multi-token standard.
 
@@ -12,7 +12,7 @@ Inspired by the [Gnosis 1155-to-20](https://github.com/gnosis/1155-to-20) conver
 
 ## Features
 
-- **Gas Efficient**: Uses OpenZeppelin's Clones library
+- **Gas Efficient**: Uses ERC-7511 minimal proxy with PUSH0 optimization (saves 200 gas at deployment, 5 gas at runtime)
 - **Deterministic Addresses**: Predictable wrapper addresses
 - **Metadata Preservation**: Automatically wraps original token metadata
 
@@ -37,6 +37,11 @@ git clone JhChoy/6909-to-20
 cd 6909-to-20
 forge test
 ```
+
+## References
+
+- [ERC-7511: Minimal Proxy Contract with PUSH0](https://eips.ethereum.org/EIPS/eip-7511)
+- [Gnosis 1155-to-20](https://github.com/gnosis/1155-to-20)
 
 ## License
 
