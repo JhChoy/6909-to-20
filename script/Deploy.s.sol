@@ -4,16 +4,23 @@ pragma solidity ^0.8.13;
 import {Script, console} from "forge-std/Script.sol";
 import {Wrapped6909Factory} from "../src/Wrapped6909Factory.sol";
 
+interface ICreateX {
+    function deployCreate2(bytes memory initCode) external payable returns (address newContract);
+}
+
 contract DeployScript is Script {
-    Wrapped6909Factory public wrapped6909Factory;
+    address constant CREATEX_ADDRESS = 0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed;
 
     function setUp() public {}
 
-    function run() public {
+    modifier broadcast() {
         vm.startBroadcast();
-
-        wrapped6909Factory = new Wrapped6909Factory();
-
+        _;
         vm.stopBroadcast();
+    }
+
+    function deploy() public broadcast {
+        address deployed = ICreateX(CREATEX_ADDRESS).deployCreate2(type(Wrapped6909Factory).creationCode);
+        console.log("Deployed to", deployed);
     }
 }
