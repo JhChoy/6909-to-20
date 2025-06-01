@@ -1,66 +1,43 @@
-## Foundry
+# 6909-to-20
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+ERC6909 to ERC20 converter
 
-Foundry consists of:
+This smart contract allows you to wrap ERC6909 tokens into ERC20 tokens using minimal proxy clones for gas-efficient deployment.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+Inspired by the [Gnosis 1155-to-20](https://github.com/gnosis/1155-to-20) converter, adapted for the ERC6909 multi-token standard.
 
-## Documentation
+## Requirements
 
-https://book.getfoundry.sh/
+- The ERC6909 token must implement `IERC6909Metadata` interface for automatic metadata wrapping
+
+## Features
+
+- **Gas Efficient**: Uses OpenZeppelin's Clones library
+- **Deterministic Addresses**: Predictable wrapper addresses
+- **Metadata Preservation**: Automatically wraps original token metadata
 
 ## Usage
 
-### Build
+```solidity
+// Create wrapped token
+Wrapped6909Factory factory = new Wrapped6909Factory();
+address wrappedToken = factory.createWrapped6909(erc6909Address, tokenId);
 
-```shell
-$ forge build
+// Deposit ERC6909 → mint ERC20
+IWrapped6909(wrappedToken).depositFor(recipient, amount);
+
+// Withdraw ERC20 → burn and get ERC6909
+IWrapped6909(wrappedToken).withdrawTo(recipient, amount);
 ```
 
-### Test
+## Development
 
-```shell
-$ forge test
+```bash
+git clone JhChoy/6909-to-20
+cd 6909-to-20
+forge test
 ```
 
-### Format
+## License
 
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+GPL-2.0-or-later
