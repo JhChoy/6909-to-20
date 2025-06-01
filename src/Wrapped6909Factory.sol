@@ -21,14 +21,20 @@ contract Wrapped6909Factory is IWrapped6909Factory {
     }
 
     function createWrapped6909(address token, uint256 tokenId) external returns (address) {
+        // Generate deterministic salt from token address and ID
         bytes32 salt = keccak256(abi.encode(token, tokenId));
+        
+        // Deploy minimal proxy clone using CREATE2 for deterministic address
         address wrapped6909 = Clones.cloneDeterministic(implementation, salt);
 
+        // Fetch metadata from the original ERC6909 token
         string memory name = IERC6909Metadata(token).name(tokenId);
         name = string.concat("Wrapped ", name);
         string memory symbol = IERC6909Metadata(token).symbol(tokenId);
         symbol = string.concat("w", symbol);
         uint8 decimals = IERC6909Metadata(token).decimals(tokenId);
+        
+        // Initialize the cloned contract with metadata and token info
         Wrapped6909(wrapped6909).initialize(token, tokenId, name, symbol, decimals);
 
         emit Wrapped6909Created(token, tokenId, wrapped6909);

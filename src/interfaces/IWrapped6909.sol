@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+/// @title IWrapped6909
+/// @author JChoy
+/// @notice Interface for wrapping ERC6909 tokens into ERC20 tokens
 interface IWrapped6909 is IERC20 {
     /// @notice The underlying ERC6909 token contract address
     function token() external view returns (address);
