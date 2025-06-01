@@ -8,23 +8,27 @@ import {Wrapped6909} from "./Wrapped6909.sol";
 import {IWrapped6909Factory} from "./interfaces/IWrapped6909Factory.sol";
 
 contract Wrapped6909Factory is IWrapped6909Factory {
-    address public immutable implementation;
+    address internal immutable _implementation;
 
     constructor() {
-        implementation = address(new Wrapped6909());
+        _implementation = address(new Wrapped6909());
+    }
+
+    function getImplementation() external view returns (address) {
+        return _implementation;
     }
 
     function getWrapped6909Address(address token, uint256 tokenId) external view returns (address) {
         bytes32 salt = keccak256(abi.encode(token, tokenId));
-        return _predictDeterministicAddress(implementation, salt);
+        return _predictDeterministicAddress(_implementation, salt);
     }
 
     function createWrapped6909(address token, uint256 tokenId) external returns (address) {
         // Generate deterministic salt from token address and ID
         bytes32 salt = keccak256(abi.encode(token, tokenId));
-        
+
         // Deploy ERC-7511 minimal proxy clone using CREATE2 for deterministic address
-        address wrapped6909 = _clone0(implementation, salt);
+        address wrapped6909 = _clone0(_implementation, salt);
 
         // Fetch metadata from the original ERC6909 token
         string memory name = IERC6909Metadata(token).name(tokenId);
@@ -32,7 +36,7 @@ contract Wrapped6909Factory is IWrapped6909Factory {
         string memory symbol = IERC6909Metadata(token).symbol(tokenId);
         symbol = string.concat("w", symbol);
         uint8 decimals = IERC6909Metadata(token).decimals(tokenId);
-        
+
         // Initialize the cloned contract with metadata and token info
         Wrapped6909(wrapped6909).initialize(token, tokenId, name, symbol, decimals);
 
@@ -57,10 +61,11 @@ contract Wrapped6909Factory is IWrapped6909Factory {
     }
 
     /// @notice Predict the address of an ERC-7511 clone before deployment
-    function _predictDeterministicAddress(
-        address implementation,
-        bytes32 salt
-    ) internal pure returns (address predicted) {
+    function _predictDeterministicAddress(address implementation, bytes32 salt)
+        internal
+        view
+        returns (address predicted)
+    {
         assembly ("memory-safe") {
             let ptr := mload(0x40)
             mstore(add(ptr, 0x38), address())

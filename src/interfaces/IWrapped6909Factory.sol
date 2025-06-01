@@ -16,7 +16,7 @@ interface IWrapped6909Factory {
     event Wrapped6909Created(address indexed token, uint256 indexed tokenId, address indexed wrapped6909);
 
     /// @notice The implementation contract address used for cloning
-    function implementation() external view returns (address);
+    function getImplementation() external view returns (address);
 
     /// @notice Predict the address of a wrapped token before creation
     /// @param token The address of the ERC6909 token to wrap
