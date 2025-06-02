@@ -24,9 +24,10 @@ interface IWrapped6909Factory {
     /// @return The predicted address of the wrapped token
     function getWrapped6909Address(address token, uint256 tokenId) external view returns (address);
 
-    /// @notice Create a new wrapped ERC6909 token
+    /// @notice Wrap ERC6909 tokens into ERC20 tokens
     /// @param token The address of the ERC6909 token to wrap
     /// @param tokenId The token ID to wrap
-    /// @return The address of the created wrapped token
-    function createWrapped6909(address token, uint256 tokenId) external returns (address);
+    /// @param amount The amount to deposit (0 for no deposit)
+    /// @return The address of the wrapped token
+    function wrap6909(address token, uint256 tokenId, uint256 amount) external returns (address);
 }

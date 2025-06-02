@@ -49,9 +49,12 @@ The script will deploy the factory contract on the block explorer.
 ## Usage
 
 ```solidity
-// Create wrapped token
+// Wrap ERC6909 tokens (without initial deposit - just creates wrapper)
 Wrapped6909Factory factory = new Wrapped6909Factory();
-address wrappedToken = factory.createWrapped6909(erc6909Address, tokenId);
+address wrappedToken = factory.wrap6909(erc6909Address, tokenId, 0);
+
+// Wrap ERC6909 tokens with deposit
+address wrappedTokenWithDeposit = factory.wrap6909(erc6909Address, tokenId, amount);
 
 // Deposit ERC6909 → mint ERC20
 IWrapped6909(wrappedToken).depositFor(recipient, amount);

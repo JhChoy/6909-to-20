@@ -42,11 +42,18 @@ contract Wrapped6909Test is Test {
         assertTrue(factory.getImplementation().code.length > 0);
     }
 
-    function test_CreateWrapped6909() public {
+    function test_GetWrapped6909Address() public {
+        address predicted = factory.getWrapped6909Address(address(mockToken), TOKEN_ID_1);
+        address actual = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
+
+        assertEq(predicted, actual);
+    }
+
+    function test_Wrap6909_CreateWrapper() public {
         vm.expectEmit(true, true, false, true);
         emit Wrapped6909Created(address(mockToken), TOKEN_ID_1, address(0));
 
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
 
         assertNotEq(wrappedToken, address(0));
         assertTrue(wrappedToken.code.length > 0);
@@ -60,9 +67,9 @@ contract Wrapped6909Test is Test {
         assertEq(wrapped.tokenId(), TOKEN_ID_1);
     }
 
-    function test_CreateWrapped6909_DifferentTokenIds() public {
-        address wrapped1 = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
-        address wrapped2 = factory.createWrapped6909(address(mockToken), TOKEN_ID_2);
+    function test_Wrap6909_DifferentTokenIds() public {
+        address wrapped1 = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
+        address wrapped2 = factory.wrap6909(address(mockToken), TOKEN_ID_2, 0);
 
         assertTrue(wrapped1 != wrapped2);
 
@@ -72,36 +79,85 @@ contract Wrapped6909Test is Test {
         assertEq(Wrapped6909(wrapped2).decimals(), 6);
     }
 
-    function test_GetWrapped6909Address() public {
-        address predicted = factory.getWrapped6909Address(address(mockToken), TOKEN_ID_1);
-        address actual = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
-
-        assertEq(predicted, actual);
-    }
-
-    function test_CreateWrapped6909_Deterministic() public {
-        address wrapped1 = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+    function test_Wrap6909_Deterministic() public {
+        address wrapped1 = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
 
         // Deploy another factory
         Wrapped6909Factory factory2 = new Wrapped6909Factory();
-        address wrapped2 = factory2.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrapped2 = factory2.wrap6909(address(mockToken), TOKEN_ID_1, 0);
 
         // Should be different addresses (different factory addresses)
         assertTrue(wrapped1 != wrapped2);
     }
 
-    function test_CreateWrapped6909_DuplicateReverts() public {
-        factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+    function test_Wrap6909_ReturnsExistingWrapper() public {
+        address wrappedToken1 = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
 
-        // Second creation should revert
+        // Second call should return the same address without reverting
+        address wrappedToken2 = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
+
+        assertEq(wrappedToken1, wrappedToken2);
+    }
+
+    function test_Wrap6909_WithDeposit() public {
+        uint256 depositAmount = 100e18;
+
+        vm.startPrank(alice);
+        mockToken.approve(address(factory), TOKEN_ID_1, depositAmount);
+
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, depositAmount);
+        vm.stopPrank();
+
+        Wrapped6909 wrapped = Wrapped6909(wrappedToken);
+
+        // Check that alice received wrapped tokens
+        assertEq(wrapped.balanceOf(alice), depositAmount);
+        // Check that the wrapper contract holds the underlying tokens
+        assertEq(mockToken.balanceOf(wrappedToken, TOKEN_ID_1), depositAmount);
+        // Check that alice's original balance decreased
+        assertEq(mockToken.balanceOf(alice, TOKEN_ID_1), MINT_AMOUNT - depositAmount);
+    }
+
+    function test_Wrap6909_ExistingWrapper_AdditionalDeposit() public {
+        // Create wrapper first
+        factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
+
+        uint256 additionalAmount = 50e18;
+
+        vm.startPrank(alice);
+        mockToken.approve(address(factory), TOKEN_ID_1, additionalAmount);
+
+        // Should not revert when wrapper already exists, just deposit
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, additionalAmount);
+        vm.stopPrank();
+
+        Wrapped6909 wrapped = Wrapped6909(wrappedToken);
+        assertEq(wrapped.balanceOf(alice), additionalAmount);
+    }
+
+    function test_Wrap6909_InsufficientBalance() public {
+        uint256 excessiveAmount = MINT_AMOUNT + 1;
+
+        vm.startPrank(alice);
+        mockToken.approve(address(factory), TOKEN_ID_1, excessiveAmount);
+
         vm.expectRevert();
-        factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        factory.wrap6909(address(mockToken), TOKEN_ID_1, excessiveAmount);
+        vm.stopPrank();
+    }
+
+    function test_Wrap6909_InsufficientAllowance() public {
+        uint256 depositAmount = 100e18;
+
+        vm.expectRevert();
+        vm.prank(alice);
+        factory.wrap6909(address(mockToken), TOKEN_ID_1, depositAmount);
     }
 
     // ============ Wrapper Tests ============
 
     function test_DepositFor() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
         Wrapped6909 wrapped = Wrapped6909(wrappedToken);
 
         uint256 depositAmount = 100e18;
@@ -118,7 +174,7 @@ contract Wrapped6909Test is Test {
     }
 
     function test_DepositFor_SelfDeposit() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
         Wrapped6909 wrapped = Wrapped6909(wrappedToken);
 
         uint256 depositAmount = 100e18;
@@ -131,8 +187,41 @@ contract Wrapped6909Test is Test {
         assertEq(wrapped.balanceOf(alice), depositAmount);
     }
 
+    function test_DepositFor_ZeroAmount() public {
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
+        Wrapped6909 wrapped = Wrapped6909(wrappedToken);
+
+        vm.startPrank(alice);
+        mockToken.approve(wrappedToken, TOKEN_ID_1, 0);
+        wrapped.depositFor(bob, 0);
+        vm.stopPrank();
+
+        assertEq(wrapped.balanceOf(bob), 0);
+    }
+
+    function test_DepositFor_InsufficientBalance() public {
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
+        Wrapped6909 wrapped = Wrapped6909(wrappedToken);
+
+        vm.startPrank(alice);
+        mockToken.approve(wrappedToken, TOKEN_ID_1, MINT_AMOUNT + 1);
+
+        vm.expectRevert();
+        wrapped.depositFor(bob, MINT_AMOUNT + 1);
+        vm.stopPrank();
+    }
+
+    function test_DepositFor_InsufficientAllowance() public {
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
+        Wrapped6909 wrapped = Wrapped6909(wrappedToken);
+
+        vm.expectRevert();
+        vm.prank(alice);
+        wrapped.depositFor(bob, 100e18);
+    }
+
     function test_WithdrawTo() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
         Wrapped6909 wrapped = Wrapped6909(wrappedToken);
 
         uint256 depositAmount = 100e18;
@@ -154,7 +243,7 @@ contract Wrapped6909Test is Test {
     }
 
     function test_WithdrawTo_FullAmount() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
         Wrapped6909 wrapped = Wrapped6909(wrappedToken);
 
         uint256 depositAmount = 100e18;
@@ -170,22 +259,8 @@ contract Wrapped6909Test is Test {
         assertEq(mockToken.balanceOf(wrappedToken, TOKEN_ID_1), 0);
     }
 
-    // ============ Edge Cases ============
-
-    function test_DepositFor_ZeroAmount() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
-        Wrapped6909 wrapped = Wrapped6909(wrappedToken);
-
-        vm.startPrank(alice);
-        mockToken.approve(wrappedToken, TOKEN_ID_1, 0);
-        wrapped.depositFor(bob, 0);
-        vm.stopPrank();
-
-        assertEq(wrapped.balanceOf(bob), 0);
-    }
-
     function test_WithdrawTo_ZeroAmount() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
         Wrapped6909 wrapped = Wrapped6909(wrappedToken);
 
         vm.prank(alice);
@@ -195,20 +270,8 @@ contract Wrapped6909Test is Test {
         assertEq(mockToken.balanceOf(bob, TOKEN_ID_1), 0);
     }
 
-    function test_DepositFor_InsufficientBalance() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
-        Wrapped6909 wrapped = Wrapped6909(wrappedToken);
-
-        vm.startPrank(alice);
-        mockToken.approve(wrappedToken, TOKEN_ID_1, MINT_AMOUNT + 1);
-
-        vm.expectRevert();
-        wrapped.depositFor(bob, MINT_AMOUNT + 1);
-        vm.stopPrank();
-    }
-
     function test_WithdrawTo_InsufficientBalance() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
         Wrapped6909 wrapped = Wrapped6909(wrappedToken);
 
         vm.expectRevert();
@@ -216,19 +279,10 @@ contract Wrapped6909Test is Test {
         wrapped.withdrawTo(bob, 1);
     }
 
-    function test_DepositFor_InsufficientAllowance() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
-        Wrapped6909 wrapped = Wrapped6909(wrappedToken);
-
-        vm.expectRevert();
-        vm.prank(alice);
-        wrapped.depositFor(bob, 100e18);
-    }
-
     // ============ ERC20 Functionality ============
 
     function test_ERC20_Transfer() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
         Wrapped6909 wrapped = Wrapped6909(wrappedToken);
 
         uint256 depositAmount = 100e18;
@@ -248,7 +302,7 @@ contract Wrapped6909Test is Test {
     }
 
     function test_ERC20_Approve() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
         Wrapped6909 wrapped = Wrapped6909(wrappedToken);
 
         uint256 approveAmount = 50e18;
@@ -260,7 +314,7 @@ contract Wrapped6909Test is Test {
     }
 
     function test_ERC20_TransferFrom() public {
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
         Wrapped6909 wrapped = Wrapped6909(wrappedToken);
 
         uint256 depositAmount = 100e18;
@@ -284,10 +338,24 @@ contract Wrapped6909Test is Test {
 
     // ============ Fuzz Tests ============
 
+    function testFuzz_Wrap6909_WithDeposit(uint256 amount) public {
+        amount = bound(amount, 1, MINT_AMOUNT);
+
+        vm.startPrank(alice);
+        mockToken.approve(address(factory), TOKEN_ID_1, amount);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, amount);
+        vm.stopPrank();
+
+        Wrapped6909 wrapped = Wrapped6909(wrappedToken);
+        assertEq(wrapped.balanceOf(alice), amount);
+        assertEq(mockToken.balanceOf(wrappedToken, TOKEN_ID_1), amount);
+        assertEq(mockToken.balanceOf(alice, TOKEN_ID_1), MINT_AMOUNT - amount);
+    }
+
     function testFuzz_DepositWithdraw(uint256 amount) public {
         amount = bound(amount, 1, MINT_AMOUNT);
 
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
         Wrapped6909 wrapped = Wrapped6909(wrappedToken);
 
         vm.startPrank(alice);
@@ -304,7 +372,7 @@ contract Wrapped6909Test is Test {
         amount1 = bound(amount1, 1, MINT_AMOUNT / 2);
         amount2 = bound(amount2, 1, MINT_AMOUNT - amount1);
 
-        address wrappedToken = factory.createWrapped6909(address(mockToken), TOKEN_ID_1);
+        address wrappedToken = factory.wrap6909(address(mockToken), TOKEN_ID_1, 0);
         Wrapped6909 wrapped = Wrapped6909(wrappedToken);
 
         vm.startPrank(alice);

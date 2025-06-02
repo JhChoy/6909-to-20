@@ -23,25 +23,39 @@ contract Wrapped6909Factory is IWrapped6909Factory {
         return _predictDeterministicAddress(_implementation, salt);
     }
 
-    function createWrapped6909(address token, uint256 tokenId) external returns (address) {
+    function wrap6909(address token, uint256 tokenId, uint256 amount) external returns (address wrapped6909) {
+        // Transfer amount from caller if provided
+        if (amount > 0) {
+            IERC6909Metadata(token).transferFrom(msg.sender, address(this), tokenId, amount);
+        }
+
         // Generate deterministic salt from token address and ID
         bytes32 salt = keccak256(abi.encode(token, tokenId));
 
-        // Deploy ERC-7511 minimal proxy clone using CREATE2 for deterministic address
-        address wrapped6909 = _clone0(_implementation, salt);
+        wrapped6909 = _predictDeterministicAddress(_implementation, salt);
+        if (wrapped6909.code.length == 0) {
+            // Deploy ERC-7511 minimal proxy clone using CREATE2 for deterministic address
+            address deployed = _clone0(_implementation, salt);
+            require(wrapped6909 == deployed);
 
-        // Fetch metadata from the original ERC6909 token
-        string memory name = IERC6909Metadata(token).name(tokenId);
-        name = string.concat("Wrapped ", name);
-        string memory symbol = IERC6909Metadata(token).symbol(tokenId);
-        symbol = string.concat("w", symbol);
-        uint8 decimals = IERC6909Metadata(token).decimals(tokenId);
+            // Fetch metadata from the original ERC6909 token
+            string memory name = IERC6909Metadata(token).name(tokenId);
+            name = string.concat("Wrapped ", name);
+            string memory symbol = IERC6909Metadata(token).symbol(tokenId);
+            symbol = string.concat("w", symbol);
+            uint8 decimals = IERC6909Metadata(token).decimals(tokenId);
 
-        // Initialize the cloned contract with metadata and token info
-        Wrapped6909(wrapped6909).initialize(token, tokenId, name, symbol, decimals);
+            // Initialize the cloned contract with metadata and token info
+            Wrapped6909(wrapped6909).initialize(token, tokenId, name, symbol, decimals);
 
-        emit Wrapped6909Created(token, tokenId, wrapped6909);
-        return wrapped6909;
+            emit Wrapped6909Created(token, tokenId, wrapped6909);
+        }
+
+        // Deposit amount into the wrapper if provided
+        if (amount > 0) {
+            IERC6909Metadata(token).approve(wrapped6909, tokenId, amount);
+            Wrapped6909(wrapped6909).depositFor(msg.sender, amount);
+        }
     }
 
     /// @notice Deploy ERC-7511 minimal proxy clone with PUSH0 optimization
