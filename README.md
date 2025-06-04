@@ -71,6 +71,21 @@ cd 6909-to-20
 forge test
 ```
 
+## Deployed Addresses
+
+
+Mainnet (1): [0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB](https://etherscan.io/address/0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB)
+
+Sepolia (11155111): [0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB](https://sepolia.etherscan.io/address/0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB)
+
+Arbitrum (42161): [0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB](https://arbiscan.io/address/0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB)
+
+Arbitrum Sepolia (421614): [0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB](https://sepolia.arbiscan.io/address/0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB)
+
+Base (8453): [0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB](https://basescan.org/address/0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB)
+
+Monad Testnet (41414): [0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB](https://testnet.monadexplorer.com/address/0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB)
+
 ## References
 
 - [ERC-7511: Minimal Proxy Contract with PUSH0](https://eips.ethereum.org/EIPS/eip-7511)
