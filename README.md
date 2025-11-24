@@ -84,7 +84,9 @@ Arbitrum Sepolia (421614): [0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB](https://
 
 Base (8453): [0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB](https://basescan.org/address/0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB)
 
-Monad Testnet (10143): [0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB](https://testnet.monadexplorer.com/address/0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB)
+Monad Mainnet (143) [0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB](https://monadvision.com/address/0x9050b0a12d92b8ba7369ecc87bcd04643fa0cfdb)
+
+Monad Testnet (10143): [0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB](https://testnet.monadvision.com/address/0x9050b0A12D92b8ba7369ecc87BcD04643Fa0CfDB)
 
 ## References
 
